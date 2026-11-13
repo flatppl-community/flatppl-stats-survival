@@ -1,0 +1,31 @@
+%%%
+# Observation likelihoods
+
+Each summary describes the same lifetime law at the indicated time.
+Censoring is independent given the model inputs. No truncation is implicit.
+%%%
+flatppl_compat = "0.1"
+
+% Log probability that the lifetime exceeds the summary's time.
+log_survival(summary) = -summary.cumulative_hazard
+
+% Probability that the lifetime exceeds the summary's time.
+survival(summary) = exp.(-summary.cumulative_hazard)
+
+% Instantaneous event rate in inverse time units.
+hazard(summary) = exp.(summary.log_hazard)
+
+% Exact event-time density with respect to Lebesgue measure in time.
+log_density(summary) = summary.log_hazard .- summary.cumulative_hazard
+
+% event is true for an exact event and false for right censoring.
+right_censored_loglikelihood(summary, event) = ifelse.(event, summary.log_hazard, 0) .- summary.cumulative_hazard
+
+% Log probability of a lifetime at or below the summary's time.
+left_censored_loglikelihood(summary) = log.(-expm1.(-summary.cumulative_hazard))
+
+% Log probability of a lifetime in (lower, upper], under one lifetime law.
+interval_loglikelihood(lower, upper) = -lower.cumulative_hazard .+ log.(-expm1.(lower.cumulative_hazard .- upper.cumulative_hazard))
+
+% The numerator event must lie entirely above the entry time.
+delayed_entry_loglikelihood(loglikelihood, entry) = loglikelihood .+ entry.cumulative_hazard

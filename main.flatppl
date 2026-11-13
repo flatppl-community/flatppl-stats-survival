@@ -1,0 +1,25 @@
+%%%
+# Survival models
+
+Parametric hazards, censoring likelihoods and regression transforms.
+Summaries contain log_hazard and cumulative_hazard, not a sampling law.
+%%%
+flatppl_compat = "0.1"
+families = load_module("src/families.flatppl")
+observations = load_module("src/observations.flatppl")
+regression = load_module("src/regression.flatppl")
+exponential = families.exponential
+weibull = families.weibull
+lognormal = families.lognormal
+loglogistic = families.loglogistic
+piecewise_exponential = families.piecewise_exponential
+log_survival = observations.log_survival
+survival = observations.survival
+hazard = observations.hazard
+log_density = observations.log_density
+right_censored_loglikelihood = observations.right_censored_loglikelihood
+left_censored_loglikelihood = observations.left_censored_loglikelihood
+interval_loglikelihood = observations.interval_loglikelihood
+delayed_entry_loglikelihood = observations.delayed_entry_loglikelihood
+proportional_hazards = regression.proportional_hazards
+accelerated_failure_time = regression.accelerated_failure_time

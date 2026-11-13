@@ -1,0 +1,91 @@
+%%%
+# Baseline hazards
+
+Times are finite and nonnegative. Shape, scale, rate and sigma are positive.
+The four smooth families accept scalars or matching numeric vectors.
+%%%
+flatppl_compat = "0.1"
+sp = standard_module("special-functions", "0.1")
+
+% Constant hazard, with rate in inverse time units.
+exponential(time, rate) = record(
+    log_hazard = log.(rate) .+ 0 .* time,
+    cumulative_hazard = rate .* time
+)
+
+_positive_time(time) = ifelse(time > 0, time, 1.0)
+_zero_loghazard(shape, scale) = ifelse(shape > 1, -inf, ifelse(shape < 1, inf, -log(scale)))
+_weibull_loghazard(time, shape, scale) = ifelse(
+    time > 0,
+    log(shape) - log(scale) + (shape - 1) * (log(_positive_time(time)) - log(scale)),
+    _zero_loghazard(shape, scale)
+)
+_weibull_cumulative(time, shape, scale) = ifelse(
+    time > 0,
+    exp(shape * (log(_positive_time(time)) - log(scale))),
+    0.0
+)
+
+% Weibull shape and time scale, matching the built-in Weibull constructor.
+weibull(time, shape, scale) = record(
+    log_hazard = _weibull_loghazard.(time, shape, scale),
+    cumulative_hazard = _weibull_cumulative.(time, shape, scale)
+)
+
+# The positive normal tail uses erfcx so its log never takes an underflowed CDF.
+_right(a) = ifelse(a >= 0, a, 0.0)
+_left(a) = ifelse(a >= 0, 0.0, -a)
+_normal_cumulative(a) = ifelse(
+    a >= 0,
+    _right(a)^2 + log(2) - log(sp.erfcx(_right(a))),
+    -log1p(-0.5 * sp.erfc(_left(a)))
+)
+_normal_loghazard(a, time, sigma) = ifelse(
+    a >= 0,
+    0.5 * log(2 / pi) - log(sigma) - log(time) - log(sp.erfcx(_right(a))),
+    -a^2 - 0.5 * log(2 * pi) - log(sigma) - log(time) + _normal_cumulative(a)
+)
+_lognormal_cumulative(time, mu, sigma) = ifelse(
+    time > 0,
+    _normal_cumulative((log(_positive_time(time)) - mu) / (sigma * sqrt(2))),
+    0.0
+)
+_lognormal_loghazard(time, mu, sigma) = ifelse(
+    time > 0,
+    _normal_loghazard((log(_positive_time(time)) - mu) / (sigma * sqrt(2)), _positive_time(time), sigma),
+    -inf
+)
+
+% Log-space mean and standard deviation, matching the built-in LogNormal.
+lognormal(time, mu, sigma) = record(
+    log_hazard = _lognormal_loghazard.(time, mu, sigma),
+    cumulative_hazard = _lognormal_cumulative.(time, mu, sigma)
+)
+
+_softplus(value) = max(value, 0) + log1p(exp(-abs(value)))
+_loglogistic_cumulative(time, shape, scale) = ifelse(
+    time > 0,
+    _softplus(shape * (log(_positive_time(time)) - log(scale))),
+    0.0
+)
+_loglogistic_loghazard(time, shape, scale) = ifelse(
+    time > 0,
+    log(shape) - log(scale) + (shape - 1) * (log(_positive_time(time)) - log(scale)) - _loglogistic_cumulative(time, shape, scale),
+    _zero_loghazard(shape, scale)
+)
+
+% Positive log-logistic lifetime, with median scale and positive shape.
+loglogistic(time, shape, scale) = record(
+    log_hazard = _loglogistic_loghazard.(time, shape, scale),
+    cumulative_hazard = _loglogistic_cumulative.(time, shape, scale)
+)
+
+_exposure(time, start, stop) = max(0, min(time, stop) - start)
+_active_rate(time, start, stop, rate) = ifelse(time >= start, ifelse(time < stop, rate, 0), 0)
+_stops(starts) = cat(starts, [inf])[indicesof(starts) .+ 1]
+
+% Scalar time; starts begins at zero and rates has the same nonzero length.
+piecewise_exponential(time, starts, rates) = record(
+    log_hazard = log(sum(_active_rate.(time, starts, _stops(starts), rates))),
+    cumulative_hazard = sum(rates .* _exposure.(time, starts, _stops(starts)))
+)

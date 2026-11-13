@@ -1,0 +1,23 @@
+%%%
+# Survival regression transforms
+
+Parameters and covariates are explicit. A positive AFT predictor lengthens
+lifetimes; a positive proportional-hazards predictor increases the hazard.
+%%%
+flatppl_compat = "0.1"
+
+% Multiply the baseline hazard by exp(eta).
+proportional_hazards(baseline, eta) = record(
+    log_hazard = baseline.log_hazard .+ eta,
+    cumulative_hazard = baseline.cumulative_hazard .* exp.(eta)
+)
+
+_aft_summary(baseline, eta) = record(
+    log_hazard = baseline.log_hazard .- eta,
+    cumulative_hazard = baseline.cumulative_hazard
+)
+
+% baseline(time, parameters) returns a hazard summary, without captured draws.
+accelerated_failure_time(baseline, time, eta, parameters) = _aft_summary(
+    baseline(time .* exp.(-eta), parameters), eta
+)

@@ -1,0 +1,40 @@
+%%%
+# Survival values and sensitivities
+
+x contains log rate, log shape, log scale, lognormal mean, and lognormal log sigma.
+The last two outputs probe tails and the derivative at a log-logistic median.
+%%%
+flatppl_compat = "0.1"
+s = load_module("../main.flatppl")
+x = elementof(cartpow(reals, 5))
+rate = exp(x[1])
+shape = exp(x[2])
+scale = exp(x[3])
+mu = x[4]
+sigma = exp(x[5])
+ex = s.exponential(2.0, rate)
+we = s.weibull(2.0, shape, scale)
+ln = s.lognormal(2.0, mu, sigma)
+ll = s.loglogistic(2.0, shape, scale)
+pw = s.piecewise_exponential(4.0, [0.0, 1.0, 3.0], rate .* [1.0, 0.6, 1.5])
+ph = s.proportional_hazards(we, mu)
+baseline(time, p) = s.weibull(time, p.shape, p.scale)
+aft = s.accelerated_failure_time(baseline, 2.0, mu, record(shape = shape, scale = scale))
+outputs = [
+    s.log_density(ex), s.log_survival(ex),
+    s.log_density(we), s.log_survival(we),
+    s.log_density(ln), s.log_survival(ln),
+    s.log_density(ll), s.log_survival(ll),
+    s.log_density(pw), s.log_survival(pw),
+    s.log_density(ph), s.log_survival(ph),
+    s.log_density(aft), s.log_survival(aft),
+    s.right_censored_loglikelihood(we, true),
+    s.right_censored_loglikelihood(we, false),
+    s.left_censored_loglikelihood(we),
+    s.interval_loglikelihood(s.weibull(1.9, shape, scale), we),
+    s.delayed_entry_loglikelihood(s.log_density(we), s.weibull(0.5, shape, scale)),
+    s.log_survival(s.lognormal(exp(40.0), mu, sigma)),
+    s.log_density(s.loglogistic(scale, shape, scale)),
+    s.log_survival(s.lognormal(exp(mu), mu, sigma)),
+]
+inputs = x

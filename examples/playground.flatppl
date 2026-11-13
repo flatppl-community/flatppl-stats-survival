@@ -1,0 +1,29 @@
+%%%
+# Censored lifetime regression
+
+Infer the baseline log scale and a treatment effect in a Weibull accelerated
+failure time model. Positive treatment effects lengthen lifetimes. Times are
+synthetic; censoring times are fixed and independent of the lifetime law.
+%%%
+flatppl_compat = "0.1"
+s = load_module("../main.flatppl")
+
+event_time_data = [1.8, 3.2, 4.1, 3.0, 4.9, 5.7]
+event_treatment_data = [0, 0, 0, 1, 1, 1]
+censor_time_data = [5.0, 6.0, 7.0, 8.0]
+censor_treatment_data = [0, 0, 1, 1]
+survived_data = [true, true, true, true]
+shape = 1.5
+
+log_scale ~ Normal(log(5.0), 0.6)
+treatment_effect ~ Normal(0.0, 0.8)
+event_scale = exp.(log_scale .+ treatment_effect .* event_treatment_data)
+censor_scale = exp.(log_scale .+ treatment_effect .* censor_treatment_data)
+
+# Exact times contribute densities; censored times contribute survival probabilities.
+event_time ~ Weibull.(shape, event_scale)
+survived ~ Bernoulli.(s.survival(s.weibull(censor_time_data, shape, censor_scale)))
+prior = lawof(record(log_scale = log_scale, treatment_effect = treatment_effect))
+forward = kernelof(record(event_time = event_time, survived = survived), log_scale, treatment_effect)
+L = likelihoodof(forward, record(event_time = event_time_data, survived = survived_data))
+Pi_post = bayesupdate(L, prior)
