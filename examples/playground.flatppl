@@ -6,7 +6,7 @@ failure time model. Positive treatment effects lengthen lifetimes. Times are
 synthetic; censoring times are fixed and independent of the lifetime law.
 %%%
 flatppl_compat = "0.1"
-s = load_module("../main.flatppl")
+s = load_module("https://raw.githubusercontent.com/flatppl-community/flatppl-stats-survival/74cbc1e82e4295461c20ef88ab2684f18f884b49/main.flatppl")
 
 event_time_data = [1.8, 3.2, 4.1, 3.0, 4.9, 5.7]
 event_treatment_data = [0, 0, 0, 1, 1, 1]
