@@ -232,16 +232,7 @@ example's probability-valued Bernoulli representation.
 The [Stan survival guide](https://mc-stan.org/docs/stan-users-guide/survival.html)
 gives the same event-density and censored-survival construction.
 
-## Examples and validation
-
-The [lifetime regression example](https://live.flatppl.org/#model=https%3A%2F%2Fraw.githubusercontent.com%2Fflatppl-community%2Fflatppl-stats-survival%2Fmain%2Fexamples%2Fplayground.flatppl&target=Pi_post)
-infers a treatment effect from exact and right-censored synthetic lifetimes.
-It uses proper priors and the ordinary prior–kernel–likelihood–posterior flow.
-
-Five baseline families return numeric hazard summaries. Helpers provide exact,
-right-, left- and interval-censored likelihoods, delayed entry, proportional
-hazards and accelerated failure time models. Censoring and entry remain explicit.
-The [reference](reference.md) gives every formula and its domain.
+## Validation
 
 Run the mathematical checks with Python's standard library and Node 24 or newer:
 

@@ -154,6 +154,19 @@ def run():
             probes += [f"a.log_density({summary})", f"a.log_survival({summary})"]
             expected += list(family(name, time, *parameters))
     close(evaluate(probes), expected)
+    # Matching parameter vectors retain a record of vectors, including the origin and tail.
+    times = [0.0, 0.2, 1.0, math.exp(40)]
+    means, sigmas = [0.2, -0.5, 0.3, 0.0], [0.9, 1.1, 0.5, 1.0]
+    summary = f"a.lognormal({json.dumps(times)},{json.dumps(means)},{json.dumps(sigmas)})"
+    expected = [(-math.inf, 0.0)] + [
+        family("lognormal", time, mu, sigma)
+        for time, mu, sigma in zip(times[1:], means[1:], sigmas[1:])
+    ]
+    close(
+        evaluate([f"{summary}.log_hazard", f"{summary}.cumulative_hazard"]),
+        [[density - survival for density, survival in expected],
+         [-survival for _, survival in expected]],
+    )
     # Recover normalized densities from the exported values on log-time quadrature nodes.
     nodes = [-25 + i * 0.025 for i in range(2001)]
     for name, parameters in families:

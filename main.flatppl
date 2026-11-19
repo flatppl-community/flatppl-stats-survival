@@ -1,8 +1,8 @@
 %%%
 # Survival models
 
-Parametric hazards, censoring likelihoods and regression transforms.
-Summaries contain log_hazard and cumulative_hazard, not a sampling law.
+Summaries contain scalar or matching vector log_hazard and cumulative_hazard.
+With h = exp(log_hazard) and H = cumulative_hazard, S = exp(-H), f = h S.
 %%%
 flatppl_compat = "0.1"
 families = load_module("src/families.flatppl")
