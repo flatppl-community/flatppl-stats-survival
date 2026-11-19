@@ -209,7 +209,7 @@ result = s.accelerated_failure_time(
 ```
 
 For a Weibull baseline this equals `weibull(time, shape, scale * exp(eta))`.
-Its proportional-hazards predictor is $-\text{shape}\,\eta$.
+Its proportional-hazards predictor is $`-\text{shape}\,\eta`$.
 
 ## Inference example
 
