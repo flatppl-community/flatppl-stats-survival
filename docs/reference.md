@@ -102,7 +102,7 @@ The corresponding generative law is `pushfwd(exp, Logistic(log(scale), 1/shape))
 length. `starts[1]` is zero; starts are finite and strictly increasing.
 Every rate is positive. With $s_{m+1}=\infty$,
 
-$$h(t)=r_j\quad(s_j\le t<s_{j+1}),\qquad
+$$h(t)=r_j\quad(s_j\le t\lt s_{j+1}),\qquad
 H(t)=\sum_{j=1}^m r_j\max(0,\min(t,s_{j+1})-s_j).$$
 
 The hazard is right-continuous at starts. The final rate continues forever;
@@ -155,7 +155,7 @@ It uses `expm1` when $H$ is small. A limit of zero gives $-\infty$.
 **`interval_loglikelihood(lower, upper)`** takes summaries from the same lifetime
 law at finite endpoints $0\le l\le u$, and returns
 
-$$\log\Pr(l<T\le u)=-H(l)+\log(1-e^{-[H(u)-H(l)]}).$$
+$$\log\Pr(l\lt T\le u)=-H(l)+\log(1-e^{-[H(u)-H(l)]}).$$
 
 Equal endpoints give $-\infty$. `expm1` avoids subtracting nearly equal survival
 probabilities, but the difference $H(u)-H(l)$ must itself remain representable.
@@ -209,7 +209,7 @@ result = s.accelerated_failure_time(
 ```
 
 For a Weibull baseline this equals `weibull(time, shape, scale * exp(eta))`.
-Its proportional-hazards predictor is $-\text{shape}\,\eta$.
+Its proportional-hazards predictor is $`-\text{shape}\,\eta`$.
 
 ## Inference example
 
