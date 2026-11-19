@@ -35,31 +35,22 @@ weibull(time, shape, scale) = record(
 # The positive normal tail uses erfcx so its log never takes an underflowed CDF.
 _right(a) = ifelse(a >= 0, a, 0.0)
 _left(a) = ifelse(a >= 0, 0.0, -a)
-_normal_cumulative(a) = ifelse(
-    a >= 0,
-    _right(a)^2 + log(2) - log(sp.erfcx(_right(a))),
-    -log1p(-0.5 * sp.erfc(_left(a)))
+_normal_summary(time, sigma, a, tail, cumulative) = record(
+    log_hazard = ifelse.(time .> 0, ifelse.(a .>= 0,
+        0.5 * log(2 / pi) .- log.(sigma) .- log.(_positive_time.(time)) .- log.(tail),
+        .-a .^ 2 .- 0.5 * log(2 * pi) .- log.(sigma) .- log.(_positive_time.(time)) .+ cumulative), -inf),
+    cumulative_hazard = cumulative
 )
-_normal_loghazard(a, time, sigma) = ifelse(
-    a >= 0,
-    0.5 * log(2 / pi) - log(sigma) - log(time) - log(sp.erfcx(_right(a))),
-    -a^2 - 0.5 * log(2 * pi) - log(sigma) - log(time) + _normal_cumulative(a)
+_lognormal_summary(time, sigma, a, tail) = _normal_summary(time, sigma, a, tail,
+    ifelse.(time .> 0, ifelse.(a .>= 0,
+        _right.(a) .^ 2 .+ log(2) .- log.(tail),
+        .-log1p.(-0.5 .* sp.erfc.(_left.(a)))), 0.0)
 )
-_lognormal_cumulative(time, mu, sigma) = ifelse(
-    time > 0,
-    _normal_cumulative((log(_positive_time(time)) - mu) / (sigma * sqrt(2))),
-    0.0
-)
-_lognormal_loghazard(time, mu, sigma) = ifelse(
-    time > 0,
-    _normal_loghazard((log(_positive_time(time)) - mu) / (sigma * sqrt(2)), _positive_time(time), sigma),
-    -inf
-)
+_lognormal_standard(time, sigma, a) = _lognormal_summary(time, sigma, a, sp.erfcx.(_right.(a)))
 
 % Log-space mean and standard deviation, matching the built-in LogNormal.
-lognormal(time, mu, sigma) = record(
-    log_hazard = _lognormal_loghazard.(time, mu, sigma),
-    cumulative_hazard = _lognormal_cumulative.(time, mu, sigma)
+lognormal(time, mu, sigma) = _lognormal_standard(
+    time, sigma, (log.(_positive_time.(time)) .- mu) ./ (sigma .* sqrt(2))
 )
 
 _softplus(value) = max(value, 0) + log1p(exp(-abs(value)))
